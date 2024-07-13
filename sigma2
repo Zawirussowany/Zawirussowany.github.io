@@ -1,0 +1,41 @@
+async function checkUser() {
+    const username = document.getElementById('username').value;
+    const resultDiv = document.getElementById('result');
+    
+    // Resetowanie wyniku
+    resultDiv.innerHTML = '';
+
+    try {
+        // Pobieranie ID użytkownika na podstawie nazwy
+        const userIdResponse = await fetch(`https://users.roblox.com/v1/users/search?keyword=${username}`);
+        const userIdData = await userIdResponse.json();
+
+        if (userIdData.data.length === 0) {
+            resultDiv.innerHTML = 'Nie znaleziono użytkownika.';
+            return;
+        }
+
+        const userId = userIdData.data[0].id;
+
+        // Pobieranie szczegółowych danych użytkownika
+        const userResponse = await fetch(`https://users.roblox.com/v1/users/${userId}`);
+        const userData = await userResponse.json();
+
+        // Sprawdzenie, czy użytkownik jest zbanowany
+        if (userData.isBanned) {
+            resultDiv.innerHTML = `Użytkownik ${username} jest zbanowany.`;
+        } else {
+            resultDiv.innerHTML = `
+                <p>Nick: ${userData.name}</p>
+                <p>Display Name: ${userData.displayName}</p>
+                <p>ID: ${userData.id}</p>
+                <p>Data dołączenia: ${new Date(userData.created).toLocaleDateString()}</p>
+                <p>Opis: ${userData.description}</p>
+                <p>Zbanowany: ${userData.isBanned ? 'Tak' : 'Nie'}</p>
+            `;
+        }
+    } catch (error) {
+        console.error('Błąd:', error);
+        resultDiv.innerHTML = 'Wystąpił błąd podczas pobierania danych.';
+    }
+}
